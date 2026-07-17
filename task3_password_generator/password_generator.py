@@ -1,109 +1,78 @@
-"""
-CodSoft Internship - Task 3: Password Generator
--------------------------------------------------
-A password generator that creates strong, random passwords.
-Users can specify the length and complexity of the password.
-"""
-
-import random
+import secrets
 import string
 
 
-def generate_password(length, use_upper, use_digits, use_special):
-    """Generate a random password based on user preferences."""
-    characters = string.ascii_lowercase
-
-    if use_upper:
-        characters += string.ascii_uppercase
-    if use_digits:
-        characters += string.digits
-    if use_special:
-        characters += string.punctuation
-
-    # Ensure at least one character from each selected category
-    password = []
-    if use_upper:
-        password.append(random.choice(string.ascii_uppercase))
-    if use_digits:
-        password.append(random.choice(string.digits))
-    if use_special:
-        password.append(random.choice(string.punctuation))
-
-    # Fill the rest with random characters from the full pool
-    remaining = length - len(password)
-    for _ in range(remaining):
-        password.append(random.choice(characters))
-
-    # Shuffle to avoid predictable positions
-    random.shuffle(password)
-    return "".join(password)
-
-
-def get_yes_no(prompt):
-    """Prompt user for a yes/no answer."""
+def get_password_length():
     while True:
-        answer = input(prompt).strip().lower()
-        if answer in ("y", "yes"):
-            return True
-        elif answer in ("n", "no"):
-            return False
-        else:
-            print("  ⚠ Please enter 'y' or 'n'.")
+        raw_input_value = input("Enter desired password length (15-64 recommended): ").strip()
+
+        if not raw_input_value.isdigit():
+            print("❌ Please enter a valid whole number.\n")
+            continue
+
+        length = int(raw_input_value)
+
+        if length < 4:
+            print("❌ Length too short to be usable. Try at least 4.\n")
+            continue
+
+        if length < 15:
+            print("⚠️  Warning: NIST 2024 guidelines recommend 15+ characters for high-security use.")
+
+        if length > 64:
+            print("❌ Length too long. Max supported is 64 characters.\n")
+            continue
+
+        return length
+
+
+def generate_password(length, use_letters=True, use_digits=True, use_symbols=False):
+    char_pool = ""
+    if use_letters:
+        char_pool += string.ascii_letters
+    if use_digits:
+        char_pool += string.digits
+    if use_symbols:
+        char_pool += string.punctuation
+
+    if not char_pool:
+        raise ValueError("At least one character set must be selected.")
+
+    password = "".join(secrets.choice(char_pool) for _ in range(length))
+    return password
+
+
+def calculate_entropy(length, pool_size):
+    import math
+    return round(length * math.log2(pool_size), 2)
 
 
 def main():
-    """Main function to run the password generator."""
-    print("\n" + "=" * 45)
-    print("   CODSOFT TASK 3 — PASSWORD GENERATOR")
-    print("=" * 45)
+    print("=" * 50)
+    print(" DecodeLabs — Enterprise Random Password Generator")
+    print("=" * 50)
 
-    while True:
-        # Get password length
-        raw = input("\n  Enter desired password length (4-128): ").strip()
+    length = get_password_length()
 
-        if not raw.isdigit():
-            print("  ⚠ Please enter a valid number.")
-            continue
+    include_symbols = input("Include special symbols (@, #, $, etc.)? (y/n): ").strip().lower() == "y"
 
-        length = int(raw)
-        if length < 4:
-            print("  ⚠ Password must be at least 4 characters.")
-            continue
-        if length > 128:
-            print("  ⚠ Password cannot exceed 128 characters.")
-            continue
+    password = generate_password(length, use_letters=True, use_digits=True, use_symbols=include_symbols)
 
-        # Get complexity preferences
-        print("\n  Choose password complexity:")
-        use_upper = get_yes_no("  Include uppercase letters? (y/n): ")
-        use_digits = get_yes_no("  Include digits?            (y/n): ")
-        use_special = get_yes_no("  Include special characters? (y/n): ")
+    pool_size = len(string.ascii_letters) + len(string.digits)
+    if include_symbols:
+        pool_size += len(string.punctuation)
 
-        # Generate and display the password
-        password = generate_password(length, use_upper, use_digits, use_special)
+    entropy = calculate_entropy(length, pool_size)
 
-        print("\n" + "-" * 45)
-        print(f"  🔐 Generated Password:")
-        print(f"\n     {password}")
-        print("\n" + "-" * 45)
-        print(f"  📏 Length: {len(password)} characters")
-
-        # Check strength
-        score = sum([use_upper, use_digits, use_special])
-        if length >= 12 and score == 3:
-            strength = "🟢 Strong"
-        elif length >= 8 and score >= 2:
-            strength = "🟡 Medium"
-        else:
-            strength = "🔴 Weak"
-        print(f"  💪 Strength: {strength}")
-        print("-" * 45)
-
-        # Ask to generate another
-        again = get_yes_no("\n  Generate another password? (y/n): ")
-        if not again:
-            print("\n  Thank you for using the Password Generator. Goodbye!\n")
-            break
+    print("\n✅ Your generated password:")
+    print(f"   {password}")
+    print(f"\n🔐 Estimated entropy: {entropy} bits")
+    if entropy >= 80:
+        print("   Strength: Excellent — resistant to modern cracking techniques.")
+    elif entropy >= 60:
+        print("   Strength: Good.")
+    else:
+        print("   Strength: Weak — consider increasing length.")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ This repository contains all the tasks completed during the **CodSoft Python Pro
 
 | #  | Task Name       | Description                                      | Link |
 |----|-----------------|--------------------------------------------------|------|
-| 1  | *(Coming Soon)* | —                                                | —    |
+| 1  | To-Do List      | To-Do List Manager with persistent JSON storage    | [View Task 1](./task1_todo_list/) |
 | 2  | Calculator      | Simple calculator with basic arithmetic operations | [View Task 2](./task2_calculator/) |
 | 3  | *(Coming Soon)* | —                                                | —    |
 
